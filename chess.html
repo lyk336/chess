@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/board.css" />
+    <title>Chess</title>
+  </head>
+  <body>
+    <main class="main">
+      <div class="main__board board" id="board">
+        <div class="board__column" id="column-a">
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+        </div>
+        <div class="board__column" id="column-b">
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+        </div>
+        <div class="board__column" id="column-c">
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+        </div>
+        <div class="board__column" id="column-d">
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+        </div>
+        <div class="board__column" id="column-e">
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+        </div>
+        <div class="board__column" id="column-f">
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+        </div>
+        <div class="board__column" id="column-g">
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+        </div>
+        <div class="board__column" id="column-h">
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+          <div class="board__cell cell-black"></div>
+          <div class="board__cell cell-white"></div>
+        </div>
+      </div>
+      <div class="main__game-menu menu-game">
+        <h2 class="menu-game__title">Game log</h2>
+        <ol class="menu-game__moves">
+          <li class="menu-game__move">
+            <span class="menu-game__whites">f4</span>
+            <span class="menu-game__blacks">e5</span>
+          </li>
+        </ol>
+      </div>
+    </main>
+    <script type="module" src="scripts/board.js"></script>
+  </body>
+</html>
