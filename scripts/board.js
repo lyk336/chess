@@ -1,7 +1,6 @@
 import { pieces } from './data/pieces.js';
 
 const board = document.getElementById('board');
-const columns = document.querySelectorAll('.board__column');
 const columnIndex = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 // some variables for moving
@@ -20,37 +19,31 @@ function activeSide() {
 const availableCells = [];
 const canTakePiece = [];
 
-function isCheck(kingColor, altBoardArgument, kingLocation) {
-  let altBoard = altBoardArgument || [];
+function isCheck(kingColor) {
   let king;
 
-  if (!altBoardArgument) {
-    for (let i = 0; i < 8; i++) {
-      altBoard.push([]);
-      for (let j = 0; j < 8; j++) {
-        altBoard[i].push([]);
-      }
+  const altBoard = [];
+  for (let i = 0; i < 8; i++) {
+    altBoard.push([]);
+    for (let j = 0; j < 8; j++) {
+      altBoard[i].push([]);
     }
-
-    document.querySelectorAll('.piece').forEach((piece) => {
-      const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
-      const row = +piece.parentElement.id[1] - 1;
-
-      const pieceName = piece.getAttribute('name');
-      const pieceColor = piece.dataset.color;
-      const pieceId = piece.id;
-      const pieceIsFirstMove = piece.isFirstMove;
-
-      altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
-
-      if (pieceName === 'king' && pieceColor === kingColor) {
-        king = altBoard[column][row][0];
-      }
-    });
-  } else {
-    king = kingLocation;
-    // console.log(altBoard, king);
   }
+  document.querySelectorAll('.piece').forEach((piece) => {
+    const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
+    const row = +piece.parentElement.id[1] - 1;
+
+    const pieceName = piece.getAttribute('name');
+    const pieceColor = piece.dataset.color;
+    const pieceId = piece.id;
+    const pieceIsFirstMove = piece.isFirstMove;
+
+    altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
+
+    if (pieceName === 'king' && pieceColor === kingColor) {
+      king = altBoard[column][row][0];
+    }
+  });
 
   const originalAvailableCells = availableCells.slice();
   const originalCanTakePiece = canTakePiece.slice();
@@ -93,6 +86,7 @@ function isCheck(kingColor, altBoardArgument, kingLocation) {
 }
 // check if moves inside availableCells are valid
 function isValidMove() {
+  // create alternative board
   const altBoard = [];
   for (let i = 0; i < 8; i++) {
     altBoard.push([]);
@@ -111,13 +105,12 @@ function isValidMove() {
 
     altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
   });
+  // -----------------------------
 
   const availableCellsPrototype = availableCells.filter((value, index) => availableCells.indexOf(value) === index);
   const canTakePiecePrototype = canTakePiece.filter((value, index) => canTakePiece.indexOf(value) === index);
 
-  for (let col = 0; col <= 7; col++) {
-    for (let row = 0; row <= 7; row++) {}
-  }
+  // active piece
   const activePieceColumn = columnIndex.findIndex((element) => element === document.getElementById(activePieceId).parentElement.id[0]);
   const activePieceRow = +document.getElementById(activePieceId).parentElement.id[1] - 1;
   const activePieceLocation = altBoard[activePieceColumn][activePieceRow];
@@ -125,33 +118,50 @@ function isValidMove() {
     name: document.getElementById(activePieceId).getAttribute('name'),
     color: document.getElementById(activePieceId).dataset.color,
     id: document.getElementById(activePieceId).id,
+    isFirstMove: document.getElementById(activePieceId).dataset.isFirstMove,
   };
+  // ----------------
 
   function updateAvailibleCellsArray(arrayPrototype, array) {
-    // king's original location
-    const kingId = activeSide() === 'white' ? 'piece1' : 'piece2';
-    const kingElement = document.getElementById(kingId);
-
-    const column = columnIndex.findIndex((element) => element === kingElement.parentElement.id[0]);
-    const row = +kingElement.parentElement.id[1] - 1;
-
-    const kingLocation = altBoard[column][row][0];
-    // ----------------
     arrayPrototype.forEach((cell) => {
-      const cellColumn = columnIndex.findIndex((element) => element === cell[0]);
-      const cellRow = +cell[1] - 1;
-
+      // changing location of piece
       activePieceLocation.length = 0;
-      altBoard[cellColumn][cellRow].push(new ChessPiece(activePiece.name, activePiece.color, activePiece.id, false));
+      const col = columnIndex.findIndex((element) => element === cell[0]);
+      const row = +cell[1] - 1;
+      const changedLocation = altBoard[col][row];
+      changedLocation.push(new ChessPiece(activePiece.name, activePiece.color, activePiece.id, activePiece.isFirstMove));
+      // ---------------------------
 
-      console.log(isCheck(activeSide(), altBoard, kingLocation));
-      if (isCheck(activeSide(), altBoard, kingLocation)) {
-        const invalidValueIndex = arrayPrototype.indexOf(cell);
-        arrayPrototype.splice(invalidValueIndex, 1);
-        console.log('does not work');
+      const kingColor = activeSide() === 'white' ? 'white' : 'black';
+      let kingCell;
+      for (let i = 0; i <= 7; i++) {
+        for (let j = 0; j <= 7; j++) {
+          if (altBoard[i][j][0] && altBoard[i][j][0].color === kingColor && altBoard[i][j][0].name === 'king') {
+            kingCell = altBoard[i][j];
+            break;
+          }
+        }
+      }
+
+      for (let i = 0; i <= 7; i++) {
+        for (let j = 0; j <= 7; j++) {
+          if (altBoard[i][j][0] && altBoard[i][j][0].color !== kingColor) {
+            altBoard[i][j][0].move().canTakePiece.forEach((newCell) => {
+              const canTakePieceColumn = columnIndex.findIndex((element) => element === newCell[0]);
+              const canTakePieceRow = +newCell[1] - 1;
+
+              if (kingCell === altBoard[canTakePieceColumn][canTakePieceRow]) {
+                console.log(kingCell, '===', altBoard);
+                const invalidValueIndex = arrayPrototype.indexOf(cell);
+                arrayPrototype.splice(invalidValueIndex, 1);
+              }
+              canTakePiece.length = 0;
+              availableCells.length = 0;
+            });
+          }
+        }
       }
     });
-    console.log(array, arrayPrototype);
     array.length = 0;
     arrayPrototype.forEach((cell) => {
       array.push(cell);
@@ -713,4 +723,3 @@ document.querySelectorAll('.board__cell').forEach((cell) => {
     }
   });
 });
-// isCheck();
