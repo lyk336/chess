@@ -38,7 +38,7 @@ function isValidMove() {
   // ----------------
 
   function updateAvailableCellsArray(array) {
-    console.log('array', array);
+    // console.log('array', array);
     const invalidIndexes = [];
     array.forEach((cell) => {
       const column = columnIndex.indexOf(cell[0]);
@@ -62,16 +62,50 @@ function isValidMove() {
         }
       }
 
-      if (king.isCheck(altBoardClone)) {
+      // if (king.isCheck(altBoardClone)) {
+      //   const invalidValueIndex = array.indexOf(cell);
+      //   invalidIndexes.push(invalidValueIndex);
+      // }
+
+      // new script for checking if move is valid
+      // loop through all enemy pieces and checking if allied king is under check
+      let isValidMove = true;
+      for (let i = 0; i <= 7; i++) {
+        for (let j = 0; j <= 7; j++) {
+          if (altBoardClone[i][j][0] && altBoardClone[i][j][0].color !== king.color) {
+            const availableCellsClone = availableCells.slice();
+            const canTakePieceClone = canTakePiece.slice();
+            availableCells.length = 0;
+            canTakePiece.length = 0;
+
+            // console.log(altBoardClone[i][j][0].move().coordinatesOfAttackedCells);
+            altBoardClone[i][j][0].move().coordinatesOfAttackedCells.forEach((coordinate) => {
+              if (king.isCheck(altBoardClone)) {
+                isValidMove = false;
+              }
+            });
+            // clear availableCells and canTakePiece arrays
+            availableCells.length = 0;
+            canTakePiece.length = 0;
+            availableCellsClone.forEach((cell) => {
+              availableCells.push(cell);
+            });
+            canTakePieceClone.forEach((cell) => {
+              canTakePiece.push(cell);
+            });
+          }
+        }
+      }
+      if (!isValidMove) {
         const invalidValueIndex = array.indexOf(cell);
         invalidIndexes.push(invalidValueIndex);
-      } else {
-        console.log(cell, king.isCheck(altBoardClone));
       }
+      // -----------------------------------------
     });
 
     invalidIndexes.reverse();
-    console.log('invalid indexes', invalidIndexes);
+    // console.log('invalid indexes', invalidIndexes);
+    // console.log('array', availableCells);
     invalidIndexes.forEach((index) => {
       array.splice(index, 1);
     });
@@ -80,12 +114,14 @@ function isValidMove() {
   updateAvailableCellsArray(canTakePiece);
 }
 
-function rookMove(rook, pieceLocation, altBoard) {
+function rookMove(rook, pieceLocation, altBoard, coordinatesOfAttackedCells) {
   // check lines
   // from rook to bottom
   for (let i = pieceLocation.row - 1; i >= 0; i--) {
     if (altBoard[pieceLocation.column][i].length === 1) {
       if (altBoard[pieceLocation.column][i][0].color !== rook.color) {
+        coordinatesOfAttackedCells.push(`${pieceLocation.column}${i}`);
+
         canTakePiece.push(`${columnIndex[pieceLocation.column]}${i + 1}`);
         break;
       } else {
@@ -100,6 +136,8 @@ function rookMove(rook, pieceLocation, altBoard) {
   for (let i = pieceLocation.row + 1; i <= 7; i++) {
     if (altBoard[pieceLocation.column][i].length === 1) {
       if (altBoard[pieceLocation.column][i][0].color !== rook.color) {
+        coordinatesOfAttackedCells.push(`${pieceLocation.column}${i}`);
+
         canTakePiece.push(`${columnIndex[pieceLocation.column]}${i + 1}`);
         break;
       } else {
@@ -114,8 +152,9 @@ function rookMove(rook, pieceLocation, altBoard) {
   for (let i = pieceLocation.column - 1; i >= 0; i--) {
     if (altBoard[i][pieceLocation.row].length === 1) {
       if (altBoard[i][pieceLocation.row][0].color !== rook.color) {
-        canTakePiece.push(`${columnIndex[i]}${pieceLocation.row + 1}`);
+        coordinatesOfAttackedCells.push(`${i}${pieceLocation.row}`);
 
+        canTakePiece.push(`${columnIndex[i]}${pieceLocation.row + 1}`);
         break;
       } else {
         break;
@@ -129,8 +168,9 @@ function rookMove(rook, pieceLocation, altBoard) {
   for (let i = pieceLocation.column + 1; i <= 7; i++) {
     if (altBoard[i][pieceLocation.row].length === 1) {
       if (altBoard[i][pieceLocation.row][0].color !== rook.color) {
-        canTakePiece.push(`${columnIndex[i]}${pieceLocation.row + 1}`);
+        coordinatesOfAttackedCells.push(`${i}${pieceLocation.row}`);
 
+        canTakePiece.push(`${columnIndex[i]}${pieceLocation.row + 1}`);
         break;
       } else {
         break;
@@ -140,7 +180,7 @@ function rookMove(rook, pieceLocation, altBoard) {
     }
   }
 }
-function knightMove(knight, pieceLocation, altBoard) {
+function knightMove(knight, pieceLocation, altBoard, coordinatesOfAttackedCells) {
   let col, row;
 
   const moveKnight = function () {
@@ -154,6 +194,7 @@ function knightMove(knight, pieceLocation, altBoard) {
     if (knightsCell) {
       if (knightsCell.length === 1) {
         if (knightsCell[0].color !== knight.color) {
+          coordinatesOfAttackedCells.push(`${col}${row}`);
           canTakePiece.push(`${columnIndex[col]}${row + 1}`);
         }
       } else {
@@ -208,7 +249,7 @@ function knightMove(knight, pieceLocation, altBoard) {
 
   moveKnight();
 }
-function kingMove(king, pieceLocation, altBoard) {
+function kingMove(king, pieceLocation, altBoard, coordinatesOfAttackedCells) {
   let col, row;
 
   row = pieceLocation.row;
@@ -223,6 +264,7 @@ function kingMove(king, pieceLocation, altBoard) {
           continue;
         } else if (element.length === 1) {
           if (element[0].color !== king.color) {
+            coordinatesOfAttackedCells.push(`${col + i}${row + j}`);
             canTakePiece.push(`${columnIndex[col + i]}${row + j + 1}`);
           } else {
             continue;
@@ -234,7 +276,7 @@ function kingMove(king, pieceLocation, altBoard) {
     }
   }
 }
-function bishopMove(bishop, pieceLocation, altBoard) {
+function bishopMove(bishop, pieceLocation, altBoard, coordinatesOfAttackedCells) {
   let col, row;
   // from bishop to top right corner
   col = pieceLocation.column + 1;
@@ -243,6 +285,7 @@ function bishopMove(bishop, pieceLocation, altBoard) {
   while (col <= 7 && row <= 7) {
     if (altBoard[col][row][0]) {
       if (altBoard[col][row][0].color !== bishop.color) {
+        coordinatesOfAttackedCells.push(`${col}${row}`);
         canTakePiece.push(`${columnIndex[col]}${row + 1}`);
         break;
       } else {
@@ -262,6 +305,7 @@ function bishopMove(bishop, pieceLocation, altBoard) {
   while (col <= 7 && row >= 0) {
     if (altBoard[col][row][0]) {
       if (altBoard[col][row][0].color !== bishop.color) {
+        coordinatesOfAttackedCells.push(`${col}${row}`);
         canTakePiece.push(`${columnIndex[col]}${row + 1}`);
         break;
       } else {
@@ -281,6 +325,7 @@ function bishopMove(bishop, pieceLocation, altBoard) {
   while (col >= 0 && row >= 0) {
     if (altBoard[col][row][0]) {
       if (altBoard[col][row][0].color !== bishop.color) {
+        coordinatesOfAttackedCells.push(`${col}${row}`);
         canTakePiece.push(`${columnIndex[col]}${row + 1}`);
         break;
       } else {
@@ -300,6 +345,7 @@ function bishopMove(bishop, pieceLocation, altBoard) {
   while (col >= 0 && row <= 7) {
     if (altBoard[col][row][0]) {
       if (altBoard[col][row][0].color !== bishop.color) {
+        coordinatesOfAttackedCells.push(`${col}${row}`);
         canTakePiece.push(`${columnIndex[col]}${row + 1}`);
         break;
       } else {
@@ -312,7 +358,7 @@ function bishopMove(bishop, pieceLocation, altBoard) {
     }
   }
 }
-function pawnMove(pawn, pieceLocation, altBoard) {
+function pawnMove(pawn, pieceLocation, altBoard, coordinatesOfAttackedCells) {
   //set direction for pawn and check wheter it's first pawn's move
   let direction;
   if (pawn.color === 'white') {
@@ -346,6 +392,7 @@ function pawnMove(pawn, pieceLocation, altBoard) {
       altBoard[pieceLocation.column + i][pieceLocation.row + direction].length === 1 &&
       altBoard[pieceLocation.column + i][pieceLocation.row + direction][0].color !== pawn.color
     ) {
+      coordinatesOfAttackedCells.push(`${pieceLocation.column + i}${pieceLocation.row + direction}`);
       const cellId = `${columnIndex[pieceLocation.column + i]}${pieceLocation.row + direction + 1}`;
       canTakePiece.push(cellId);
     }
@@ -409,6 +456,8 @@ class ChessPiece {
       row: +pieceElement.parentElement.id[1] - 1,
     };
 
+    const coordinatesOfAttackedCells = [];
+
     // creating alternative board
     const altBoard = [];
     fillAltBoard(altBoard);
@@ -417,34 +466,34 @@ class ChessPiece {
     switch (this.name) {
       case 'king':
         // movement
-        kingMove(this, pieceLocation, altBoard);
+        kingMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
 
       case 'queen':
         // queen's movement = bishop + rook
-        bishopMove(this, pieceLocation, altBoard);
-        rookMove(this, pieceLocation, altBoard);
+        bishopMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
+        rookMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
 
       case 'bishop':
-        bishopMove(this, pieceLocation, altBoard);
+        bishopMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
 
       case 'knight':
-        knightMove(this, pieceLocation, altBoard);
+        knightMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
 
       case 'rook':
-        rookMove(this, pieceLocation, altBoard);
+        rookMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
 
       case 'pawn':
-        pawnMove(this, pieceLocation, altBoard);
+        pawnMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
 
         break;
     }
@@ -452,6 +501,7 @@ class ChessPiece {
     return {
       availableCells,
       canTakePiece,
+      coordinatesOfAttackedCells,
     };
   }
   isCheck(createdAltBoard) {
@@ -459,6 +509,7 @@ class ChessPiece {
       console.log('not a king');
       return false;
     }
+    const coordinatesOfAttackedCells = [];
     // creating alternative board
     const altBoard = createdAltBoard;
 
@@ -498,23 +549,23 @@ class ChessPiece {
       canTakePiece.length = 0;
     }
     // checking for pawns
-    pawnMove(this, pieceLocation, altBoard);
+    pawnMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
     checkSpecificPieces('pawn');
 
     // checking for rooks and queen
-    rookMove(this, pieceLocation, altBoard);
+    rookMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
     checkSpecificPieces('rook', 'queen');
 
     // checking for bishops and queen
-    bishopMove(this, pieceLocation, altBoard);
+    bishopMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
     checkSpecificPieces('bishop', 'queen');
 
     // checking for knights
-    knightMove(this, pieceLocation, altBoard);
+    knightMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
     checkSpecificPieces('knight');
 
     // checking for kings
-    kingMove(this, pieceLocation, altBoard);
+    kingMove(this, pieceLocation, altBoard, coordinatesOfAttackedCells);
     checkSpecificPieces('king');
 
     availableCellsClone.forEach((cell) => {
@@ -738,6 +789,7 @@ document.querySelectorAll('.board__cell').forEach((cell) => {
 
         return isCheck;
       }
+      // if check for enemy king => next turn + mark for king
       if (isCheck(activeSide() === 'white' ? 'black' : 'white')) {
         const kingId = activeSide() === 'white' ? 'piece2' : 'piece1';
         const checkMark = document.createElement('div');
