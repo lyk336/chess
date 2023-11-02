@@ -19,156 +19,65 @@ function activeSide() {
 const availableCells = [];
 const canTakePiece = [];
 
-function isCheck(kingColor) {
-  let king;
-
-  const altBoard = [];
-  for (let i = 0; i < 8; i++) {
-    altBoard.push([]);
-    for (let j = 0; j < 8; j++) {
-      altBoard[i].push([]);
-    }
-  }
-  document.querySelectorAll('.piece').forEach((piece) => {
-    const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
-    const row = +piece.parentElement.id[1] - 1;
-
-    const pieceName = piece.getAttribute('name');
-    const pieceColor = piece.dataset.color;
-    const pieceId = piece.id;
-    const pieceIsFirstMove = piece.isFirstMove;
-
-    altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
-
-    if (pieceName === 'king' && pieceColor === kingColor) {
-      king = altBoard[column][row][0];
-    }
-  });
-
-  const originalAvailableCells = availableCells.slice();
-  const originalCanTakePiece = canTakePiece.slice();
-  let localCanTakePiece = [];
-  let localAvailableCells = [];
-
-  let isCheck;
-  for (let col = 0; col <= 7; col++) {
-    for (let row = 0; row <= 7; row++) {
-      if (altBoard[col][row][0] && altBoard[col][row][0].color === activeSide()) {
-        if (altBoard[col][row][0].move().canTakePiece.length > 0) {
-          const arr = altBoard[col][row][0].move().canTakePiece;
-          localCanTakePiece = arr.filter((value, index) => arr.indexOf(value) === index);
-
-          localCanTakePiece.forEach((cell) => {
-            const cellCol = columnIndex.findIndex((element) => element === cell[0]);
-            const cellRow = +cell[1] - 1;
-
-            // console.log(king);
-            if (altBoard[cellCol][cellRow][0].id === king.id) {
-              isCheck = true;
-            }
-          });
-        }
-      }
-    }
-  }
-  localAvailableCells = [];
-
-  availableCells.length = 0;
-  originalAvailableCells.forEach((cell) => {
-    availableCells.push(cell);
-  });
-  canTakePiece.length = 0;
-  originalCanTakePiece.forEach((cell) => {
-    canTakePiece.push(cell);
-  });
-
-  return isCheck;
-}
-// check if moves inside availableCells are valid
+// check if moves inside all available cells are valid
 function isValidMove() {
   // create alternative board
   const altBoard = [];
-  for (let i = 0; i < 8; i++) {
-    altBoard.push([]);
-    for (let j = 0; j < 8; j++) {
-      altBoard[i].push([]);
-    }
-  }
-  document.querySelectorAll('.piece').forEach((piece) => {
-    const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
-    const row = +piece.parentElement.id[1] - 1;
-
-    const pieceName = piece.getAttribute('name');
-    const pieceColor = piece.dataset.color;
-    const pieceId = piece.id;
-    const pieceIsFirstMove = piece.dataset.isFirstMove || false;
-
-    altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
-  });
-  // -----------------------------
-
-  const availableCellsPrototype = availableCells.filter((value, index) => availableCells.indexOf(value) === index);
-  const canTakePiecePrototype = canTakePiece.filter((value, index) => canTakePiece.indexOf(value) === index);
+  fillAltBoard(altBoard);
 
   // active piece
-  const activePieceColumn = columnIndex.findIndex((element) => element === document.getElementById(activePieceId).parentElement.id[0]);
+  const activePieceColumn = columnIndex.indexOf(document.getElementById(activePieceId).parentElement.id[0]);
   const activePieceRow = +document.getElementById(activePieceId).parentElement.id[1] - 1;
-  const activePieceLocation = altBoard[activePieceColumn][activePieceRow];
   const activePiece = {
     name: document.getElementById(activePieceId).getAttribute('name'),
     color: document.getElementById(activePieceId).dataset.color,
     id: document.getElementById(activePieceId).id,
     isFirstMove: document.getElementById(activePieceId).dataset.isFirstMove,
   };
+
   // ----------------
 
-  function updateAvailibleCellsArray(arrayPrototype, array) {
-    arrayPrototype.forEach((cell) => {
-      // changing location of piece
-      activePieceLocation.length = 0;
-      const col = columnIndex.findIndex((element) => element === cell[0]);
+  function updateAvailableCellsArray(array) {
+    console.log('array', array);
+    const invalidIndexes = [];
+    array.forEach((cell) => {
+      const column = columnIndex.indexOf(cell[0]);
       const row = +cell[1] - 1;
-      const changedLocation = altBoard[col][row];
-      changedLocation.push(new ChessPiece(activePiece.name, activePiece.color, activePiece.id, activePiece.isFirstMove));
-      // ---------------------------
 
-      const kingColor = activeSide() === 'white' ? 'white' : 'black';
-      let kingCell;
+      const altBoardClone = altBoard.slice();
+
+      const activePieceLocation = altBoardClone[activePieceColumn][activePieceRow];
+      const newLocation = altBoardClone[column][row];
+      newLocation.length = 0;
+      newLocation.push(new ChessPiece(activePiece.name, activePiece.color, activePiece.id, activePiece.isFirstMove));
+      activePieceLocation.length = 0;
+
+      // searching for king
+      let king;
       for (let i = 0; i <= 7; i++) {
         for (let j = 0; j <= 7; j++) {
-          if (altBoard[i][j][0] && altBoard[i][j][0].color === kingColor && altBoard[i][j][0].name === 'king') {
-            kingCell = altBoard[i][j];
-            break;
+          if (altBoardClone[i][j][0] && altBoardClone[i][j][0].name === 'king' && altBoardClone[i][j][0].color === activeSide()) {
+            king = altBoardClone[i][j][0];
           }
         }
       }
 
-      for (let i = 0; i <= 7; i++) {
-        for (let j = 0; j <= 7; j++) {
-          if (altBoard[i][j][0] && altBoard[i][j][0].color !== kingColor) {
-            altBoard[i][j][0].move().canTakePiece.forEach((newCell) => {
-              const canTakePieceColumn = columnIndex.findIndex((element) => element === newCell[0]);
-              const canTakePieceRow = +newCell[1] - 1;
-
-              if (kingCell === altBoard[canTakePieceColumn][canTakePieceRow]) {
-                console.log(kingCell, '===', altBoard);
-                const invalidValueIndex = arrayPrototype.indexOf(cell);
-                arrayPrototype.splice(invalidValueIndex, 1);
-              }
-              canTakePiece.length = 0;
-              availableCells.length = 0;
-            });
-          }
-        }
+      if (king.isCheck(altBoardClone)) {
+        const invalidValueIndex = array.indexOf(cell);
+        invalidIndexes.push(invalidValueIndex);
+      } else {
+        console.log(cell, king.isCheck(altBoardClone));
       }
     });
-    array.length = 0;
-    arrayPrototype.forEach((cell) => {
-      array.push(cell);
+
+    invalidIndexes.reverse();
+    console.log('invalid indexes', invalidIndexes);
+    invalidIndexes.forEach((index) => {
+      array.splice(index, 1);
     });
   }
-  updateAvailibleCellsArray(availableCellsPrototype, availableCells);
-  updateAvailibleCellsArray(canTakePiecePrototype, canTakePiece);
+  updateAvailableCellsArray(availableCells);
+  updateAvailableCellsArray(canTakePiece);
 }
 
 function rookMove(rook, pieceLocation, altBoard) {
@@ -467,6 +376,27 @@ function pawnMove(pawn, pieceLocation, altBoard) {
   }
 }
 
+// function which fills alt board
+function fillAltBoard(altBoard) {
+  for (let i = 0; i < 8; i++) {
+    altBoard.push([]);
+    for (let j = 0; j < 8; j++) {
+      altBoard[i].push([]);
+    }
+  }
+
+  document.querySelectorAll('.piece').forEach((piece) => {
+    const column = columnIndex.indexOf(piece.parentElement.id[0]);
+    const row = +piece.parentElement.id[1] - 1;
+
+    const pieceName = piece.getAttribute('name');
+    const pieceColor = piece.dataset.color;
+    const pieceId = piece.id;
+    const pieceIsFirstMove = piece.dataset.isFirstMove || false;
+
+    altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
+  });
+}
 class ChessPiece {
   name;
   color;
@@ -475,30 +405,13 @@ class ChessPiece {
   move() {
     const pieceElement = document.getElementById(this.id);
     const pieceLocation = {
-      column: columnIndex.findIndex((element) => element === pieceElement.parentElement.id[0]),
+      column: columnIndex.indexOf(pieceElement.parentElement.id[0]),
       row: +pieceElement.parentElement.id[1] - 1,
     };
 
     // creating alternative board
     const altBoard = [];
-    for (let i = 0; i < 8; i++) {
-      altBoard.push([]);
-      for (let j = 0; j < 8; j++) {
-        altBoard[i].push([]);
-      }
-    }
-
-    document.querySelectorAll('.piece').forEach((piece) => {
-      const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
-      const row = +piece.parentElement.id[1] - 1;
-
-      const pieceName = piece.getAttribute('name');
-      const pieceColor = piece.dataset.color;
-      const pieceId = piece.id;
-      const pieceIsFirstMove = piece.isFirstMove;
-
-      altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
-    });
+    fillAltBoard(altBoard);
     //-----------------------
 
     switch (this.name) {
@@ -541,6 +454,77 @@ class ChessPiece {
       canTakePiece,
     };
   }
+  isCheck(createdAltBoard) {
+    if (this.name !== 'king') {
+      console.log('not a king');
+      return false;
+    }
+    // creating alternative board
+    const altBoard = createdAltBoard;
+
+    // find piece location
+    const pieceLocation = {
+      column: 0,
+      row: 0,
+    };
+
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        if (altBoard[i][j][0] && altBoard[i][j][0].id === this.id) {
+          pieceLocation.column = i;
+          pieceLocation.row = j;
+          break;
+        }
+      }
+    }
+
+    const availableCellsClone = availableCells.slice();
+    const canTakePieceClone = canTakePiece.slice();
+    availableCells.length = 0;
+    canTakePiece.length = 0;
+
+    let isCheck;
+    function checkSpecificPieces(pieceName, ifQueen) {
+      canTakePiece.forEach((cell) => {
+        const column = columnIndex.indexOf(cell[0]);
+        const row = +cell[1] - 1;
+
+        if (altBoard[column][row][0].name === pieceName || altBoard[column][row][0].name === ifQueen) {
+          isCheck = true;
+          return;
+        }
+      });
+      availableCells.length = 0;
+      canTakePiece.length = 0;
+    }
+    // checking for pawns
+    pawnMove(this, pieceLocation, altBoard);
+    checkSpecificPieces('pawn');
+
+    // checking for rooks and queen
+    rookMove(this, pieceLocation, altBoard);
+    checkSpecificPieces('rook', 'queen');
+
+    // checking for bishops and queen
+    bishopMove(this, pieceLocation, altBoard);
+    checkSpecificPieces('bishop', 'queen');
+
+    // checking for knights
+    knightMove(this, pieceLocation, altBoard);
+    checkSpecificPieces('knight');
+
+    // checking for kings
+    kingMove(this, pieceLocation, altBoard);
+    checkSpecificPieces('king');
+
+    availableCellsClone.forEach((cell) => {
+      availableCells.push(cell);
+    });
+    canTakePieceClone.forEach((cell) => {
+      canTakePiece.push(cell);
+    });
+    return isCheck;
+  }
   constructor(name, color, id, isFirstMove) {
     this.name = name;
     this.color = color;
@@ -582,7 +566,7 @@ function pieceFun(pieceObj) {
   }
 }
 
-// function to show availible cells to move and function which removes them
+// function to show available cells to move and function which removes them
 function addAvailableCells(pieceObj) {
   pieceObj.move();
   // remove invalid cells from arrays
@@ -592,7 +576,7 @@ function addAvailableCells(pieceObj) {
 
   availableCellsPrototype.forEach((cell) => {
     const availableCell = document.createElement('div');
-    availableCell.className = 'cell__availible';
+    availableCell.className = 'cell__available';
     document.getElementById(cell).appendChild(availableCell);
   });
 
@@ -607,8 +591,8 @@ function addAvailableCells(pieceObj) {
 }
 
 function removeAvailableCells() {
-  if (document.querySelector('.cell__availible')) {
-    document.querySelectorAll('.cell__availible').forEach((cell) => {
+  if (document.querySelector('.cell__available')) {
+    document.querySelectorAll('.cell__available').forEach((cell) => {
       cell.remove();
     });
   }
@@ -689,6 +673,71 @@ document.querySelectorAll('.board__cell').forEach((cell) => {
         });
       }
 
+      function isCheck(kingColor) {
+        let king;
+
+        const altBoard = [];
+        for (let i = 0; i < 8; i++) {
+          altBoard.push([]);
+          for (let j = 0; j < 8; j++) {
+            altBoard[i].push([]);
+          }
+        }
+        document.querySelectorAll('.piece').forEach((piece) => {
+          const column = columnIndex.findIndex((element) => element === piece.parentElement.id[0]);
+          const row = +piece.parentElement.id[1] - 1;
+
+          const pieceName = piece.getAttribute('name');
+          const pieceColor = piece.dataset.color;
+          const pieceId = piece.id;
+          const pieceIsFirstMove = piece.dataset.isFirstMove || false;
+
+          altBoard[column][row].push(new ChessPiece(pieceName, pieceColor, pieceId, pieceIsFirstMove));
+
+          if (pieceName === 'king' && pieceColor === kingColor) {
+            king = altBoard[column][row][0];
+          }
+        });
+
+        const originalAvailableCells = availableCells.slice();
+        const originalCanTakePiece = canTakePiece.slice();
+        let localCanTakePiece = [];
+        let localAvailableCells = [];
+
+        let isCheck;
+        for (let col = 0; col <= 7; col++) {
+          for (let row = 0; row <= 7; row++) {
+            if (altBoard[col][row][0] && altBoard[col][row][0].color === activeSide()) {
+              if (altBoard[col][row][0].move().canTakePiece.length > 0) {
+                const arr = altBoard[col][row][0].move().canTakePiece;
+                localCanTakePiece = arr.filter((value, index) => arr.indexOf(value) === index);
+
+                localCanTakePiece.forEach((cell) => {
+                  const cellCol = columnIndex.findIndex((element) => element === cell[0]);
+                  const cellRow = +cell[1] - 1;
+
+                  // console.log(king);
+                  if (altBoard[cellCol][cellRow][0].id === king.id) {
+                    isCheck = true;
+                  }
+                });
+              }
+            }
+          }
+        }
+        localAvailableCells = [];
+
+        availableCells.length = 0;
+        originalAvailableCells.forEach((cell) => {
+          availableCells.push(cell);
+        });
+        canTakePiece.length = 0;
+        originalCanTakePiece.forEach((cell) => {
+          canTakePiece.push(cell);
+        });
+
+        return isCheck;
+      }
       if (isCheck(activeSide() === 'white' ? 'black' : 'white')) {
         const kingId = activeSide() === 'white' ? 'piece2' : 'piece1';
         const checkMark = document.createElement('div');
@@ -707,7 +756,7 @@ document.querySelectorAll('.board__cell').forEach((cell) => {
     }
 
     // permission to move only when one of the pieces was chosen
-    if (isPieceActive && cell.contains(cell.querySelector('.cell__availible') || cell.querySelector('.cell__can-take'))) {
+    if (isPieceActive && cell.contains(cell.querySelector('.cell__available') || cell.querySelector('.cell__can-take'))) {
       // checking if this cell contains piece
       if (cell.contains(cell.querySelector('.piece'))) {
         pieceId = cell.querySelector('.piece').id;
