@@ -48,12 +48,12 @@ body {
 }
 
 :root {
-  --cell-size: 6em;
-  --light-cell: rgb(249, 235, 213);
-  --dark-cell: rgb(52, 35, 19);
-  --active-cell: rgb(183, 86, 240);
-  --available-cell: rgb(5, 139, 222);
-  --can-take-cell: rgb(176, 27, 72);
+  --square-size: 6em;
+  --light-square: rgb(249, 235, 213);
+  --dark-square: rgb(52, 35, 19);
+  --active-square: rgb(183, 86, 240);
+  --available-square: rgb(5, 139, 222);
+  --can-take-square: rgb(176, 27, 72);
   --check: rgb(186, 4, 58);
 }
 /*=================
@@ -69,16 +69,16 @@ body {
 .board {
   display: flex;
 }
-.board__cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
+.board__square {
+  width: var(--square-size);
+  height: var(--square-size);
   position: relative;
 }
-.cell-black {
-  background-color: var(--dark-cell);
+.square-black {
+  background-color: var(--dark-square);
 }
-.cell-white {
-  background-color: var(--light-cell);
+.square-white {
+  background-color: var(--light-square);
 }
 
 /*==================
@@ -103,8 +103,8 @@ body {
 
 .piece__active,
 .piece__check,
-.cell__available,
-.cell__can-take {
+.square__available,
+.square__can-take {
   position: absolute;
   z-index: 1;
   top: 0;
@@ -116,16 +116,16 @@ body {
   opacity: 0.4;
 }
 .piece__active {
-  background-color: var(--active-cell);
+  background-color: var(--active-square);
 }
-.cell__available {
+.square__available {
   cursor: pointer;
-  background-color: var(--available-cell);
+  background-color: var(--available-square);
 }
-.cell__can-take {
+.square__can-take {
   cursor: pointer;
 
-  background-color: var(--can-take-cell);
+  background-color: var(--can-take-square);
 }
 .piece__check {
   background-color: var(--check);
