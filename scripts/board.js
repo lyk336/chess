@@ -78,19 +78,290 @@ class Pawn extends ChessPiece {
   }
 }
 class Rook extends ChessPiece {
-  move() {}
+  move() {
+    const availableSquares = [];
+    const canTakePieceSquares = [];
+
+    const altBoard = [];
+    fillAltBoard(altBoard);
+
+    const squareId = document.getElementById(this.id).parentElement.id;
+    const rookPosition = {
+      column: columnIndex.indexOf(squareId[0]),
+      row: +squareId[1] - 1,
+    };
+
+    // if direction = -1, then it's mean that rook moves left or down; if direction =1 => moves top or right
+    for (let direction = -1; direction <= 1; direction++) {
+      if (direction === 0) {
+        continue;
+      }
+      // check whole row
+      for (let column = rookPosition.column + direction; column >= 0 && column <= 7; column += direction) {
+        if (altBoard[column][rookPosition.row][0] && altBoard[column][rookPosition.row][0].color === this.color) {
+          // if allied piece
+          break;
+        } else if (altBoard[column][rookPosition.row][0] && altBoard[column][rookPosition.row][0].color !== this.color) {
+          // if enemy piece
+          canTakePieceSquares.push(`${columnIndex[column]}${rookPosition.row + 1}`);
+          break;
+        } else {
+          // if square is empty
+          availableSquares.push(`${columnIndex[column]}${rookPosition.row + 1}`);
+        }
+      }
+      // check whole column
+      for (let row = rookPosition.row + direction; row >= 0 && row <= 7; row += direction) {
+        if (altBoard[rookPosition.column][row][0] && altBoard[rookPosition.column][row][0].color === this.color) {
+          // if allied piece
+          break;
+        } else if (altBoard[rookPosition.column][row][0] && altBoard[rookPosition.column][row][0].color !== this.color) {
+          // if enemy piece
+          canTakePieceSquares.push(`${columnIndex[rookPosition.column]}${row + 1}`);
+          break;
+        } else {
+          // if square is empty
+          availableSquares.push(`${columnIndex[rookPosition.column]}${row + 1}`);
+        }
+      }
+    }
+
+    return {
+      availableSquares,
+      canTakePieceSquares,
+    };
+  }
 }
 class Bishop extends ChessPiece {
-  move() {}
+  move() {
+    const availableSquares = [];
+    const canTakePieceSquares = [];
+
+    const altBoard = [];
+    fillAltBoard(altBoard);
+
+    const squareId = document.getElementById(this.id).parentElement.id;
+    const bishopPosition = {
+      column: columnIndex.indexOf(squareId[0]),
+      row: +squareId[1] - 1,
+    };
+
+    // if columnDirection = -1, then it's mean that bishop moves to left; if columnDirection = 1 => moves to right
+    // if rowDirection = -1, then it's mean that bishop moves to bottom; if rowDirection = 1 => moves to top
+
+    for (let columnDirection = -1; columnDirection <= 1; columnDirection++) {
+      if (columnDirection === 0) {
+        continue;
+      }
+      for (let rowDirection = -1; rowDirection <= 1; rowDirection++) {
+        if (rowDirection === 0) {
+          continue;
+        }
+
+        let column = bishopPosition.column + columnDirection;
+        let row = bishopPosition.row + rowDirection;
+        while (column >= 0 && column <= 7 && row >= 0 && row <= 7) {
+          if (altBoard[column][row][0]) {
+            if (altBoard[column][row][0].color !== this.color) {
+              canTakePieceSquares.push(`${columnIndex[column]}${row + 1}`);
+              break;
+            } else {
+              break;
+            }
+          } else {
+            availableSquares.push(`${columnIndex[column]}${row + 1}`);
+            column += columnDirection;
+            row += rowDirection;
+          }
+        }
+      }
+    }
+
+    return {
+      availableSquares,
+      canTakePieceSquares,
+    };
+  }
 }
 class Knight extends ChessPiece {
-  move() {}
+  move() {
+    const availableSquares = [];
+    const canTakePieceSquares = [];
+
+    const altBoard = [];
+    fillAltBoard(altBoard);
+
+    const squareId = document.getElementById(this.id).parentElement.id;
+    const knightPosition = {
+      column: columnIndex.indexOf(squareId[0]),
+      row: +squareId[1] - 1,
+    };
+
+    for (let columnPosition = -2; columnPosition <= 2; columnPosition++) {
+      if (columnPosition === 0) {
+        continue;
+      }
+
+      for (let rowPosition = -2; rowPosition <= 2; rowPosition++) {
+        // nonexistent options
+        if (rowPosition === 0 || rowPosition === columnPosition || rowPosition === columnPosition * -1) {
+          continue;
+        }
+
+        const column = knightPosition.column + columnPosition;
+        const row = knightPosition.row + rowPosition;
+
+        if (column >= 0 && row >= 0 && column <= 7 && row <= 7) {
+          let knightsCell = altBoard[column][row];
+          // check if this cell exists
+          if (knightsCell) {
+            if (knightsCell[0] && knightsCell[0].color !== this.color) {
+              canTakePieceSquares.push(`${columnIndex[column]}${row + 1}`);
+            } else if (knightsCell[0] && knightsCell[0].color === this.color) {
+              continue;
+            } else {
+              availableSquares.push(`${columnIndex[column]}${row + 1}`);
+            }
+          }
+        } else {
+          continue;
+        }
+      }
+    }
+
+    return {
+      availableSquares,
+      canTakePieceSquares,
+    };
+  }
 }
 class Queen extends ChessPiece {
-  move() {}
+  move() {
+    const availableSquares = [];
+    const canTakePieceSquares = [];
+
+    const altBoard = [];
+    fillAltBoard(altBoard);
+
+    const squareId = document.getElementById(this.id).parentElement.id;
+    const queenPosition = {
+      column: columnIndex.indexOf(squareId[0]),
+      row: +squareId[1] - 1,
+    };
+
+    // rook move
+    // if direction = -1, then it's mean that queen moves left or down; if direction =1 => moves top or right
+    for (let direction = -1; direction <= 1; direction++) {
+      if (direction === 0) {
+        continue;
+      }
+      // check whole row
+      for (let column = queenPosition.column + direction; column >= 0 && column <= 7; column += direction) {
+        if (altBoard[column][queenPosition.row][0] && altBoard[column][queenPosition.row][0].color === this.color) {
+          // if allied piece
+          break;
+        } else if (altBoard[column][queenPosition.row][0] && altBoard[column][queenPosition.row][0].color !== this.color) {
+          // if enemy piece
+          canTakePieceSquares.push(`${columnIndex[column]}${queenPosition.row + 1}`);
+          break;
+        } else {
+          // if square is empty
+          availableSquares.push(`${columnIndex[column]}${queenPosition.row + 1}`);
+        }
+      }
+      // check whole column
+      for (let row = queenPosition.row + direction; row >= 0 && row <= 7; row += direction) {
+        if (altBoard[queenPosition.column][row][0] && altBoard[queenPosition.column][row][0].color === this.color) {
+          // if allied piece
+          break;
+        } else if (altBoard[queenPosition.column][row][0] && altBoard[queenPosition.column][row][0].color !== this.color) {
+          // if enemy piece
+          canTakePieceSquares.push(`${columnIndex[queenPosition.column]}${row + 1}`);
+          break;
+        } else {
+          // if square is empty
+          availableSquares.push(`${columnIndex[queenPosition.column]}${row + 1}`);
+        }
+      }
+    }
+
+    // bishop move
+    // if columnDirection = -1, then it's mean that queen moves to left; if columnDirection = 1 => moves to right
+    // if rowDirection = -1, then it's mean that queen moves to bottom; if rowDirection = 1 => moves to top
+
+    for (let columnDirection = -1; columnDirection <= 1; columnDirection++) {
+      if (columnDirection === 0) {
+        continue;
+      }
+      for (let rowDirection = -1; rowDirection <= 1; rowDirection++) {
+        if (rowDirection === 0) {
+          continue;
+        }
+
+        let column = queenPosition.column + columnDirection;
+        let row = queenPosition.row + rowDirection;
+        while (column >= 0 && column <= 7 && row >= 0 && row <= 7) {
+          if (altBoard[column][row][0]) {
+            if (altBoard[column][row][0].color !== this.color) {
+              canTakePieceSquares.push(`${columnIndex[column]}${row + 1}`);
+              break;
+            } else {
+              break;
+            }
+          } else {
+            availableSquares.push(`${columnIndex[column]}${row + 1}`);
+            column += columnDirection;
+            row += rowDirection;
+          }
+        }
+      }
+    }
+
+    return {
+      availableSquares,
+      canTakePieceSquares,
+    };
+  }
 }
 class King extends ChessPiece {
-  move() {}
+  move() {
+    const availableSquares = [];
+    const canTakePieceSquares = [];
+
+    const altBoard = [];
+    fillAltBoard(altBoard);
+
+    const squareId = document.getElementById(this.id).parentElement.id;
+    const kingPosition = {
+      column: columnIndex.indexOf(squareId[0]),
+      row: +squareId[1] - 1,
+    };
+
+    for (let columnPosition = -1; columnPosition <= 1; columnPosition++) {
+      for (let rowPosition = -1; rowPosition <= 1; rowPosition++) {
+        // this is king's position so it's invalid square for checking
+        if (columnPosition === 0 && rowPosition === 0) {
+          continue;
+        }
+        const column = kingPosition.column + columnPosition;
+        const row = kingPosition.row + rowPosition;
+        if (altBoard[column][row]) {
+          if (altBoard[column][row][0] && altBoard[column][row][0].color !== this.color) {
+            canTakePieceSquares.push(`${columnIndex[column]}${row + 1}`);
+          } else if (altBoard[column][row][0] && altBoard[column][row][0].color === this.color) {
+            continue;
+          } else {
+            availableSquares.push(`${columnIndex[column]}${row + 1}`);
+          }
+        }
+      }
+    }
+
+    return {
+      availableSquares,
+      canTakePieceSquares,
+    };
+  }
 }
 
 // function which fills alt board
@@ -118,48 +389,16 @@ function fillAltBoard(altBoard) {
 // management all marks for squares
 const marks = {
   addMark(pieceObj) {
-    function replacePiece(square) {
-      // we can't take kings so we check if this cell has king or not
-      if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
-        return;
-      }
-
-      const pieceElementClone = document.getElementById(pieceObj.id).cloneNode(true);
-      pieceElementClone.removeAttribute('data-is-first-move');
-      // remove piece from start position
-      document.getElementById(pieceObj.id).remove();
-      // clear inner html of selected square and add piece to it new position
-      square.innerHTML = '';
-      square.appendChild(pieceElementClone);
-
-      document.getElementById(pieceObj.id).addEventListener('click', () => {
-        const chessPiece = createPiece(pieceObj.name, pieceObj.color, pieceObj.id, false);
-        pieceFun(chessPiece);
-      });
-    }
-
     pieceObj.move().availableSquares.forEach((square) => {
       const squareMarkElement = document.createElement('div');
       squareMarkElement.className = 'square__available';
       document.getElementById(square).appendChild(squareMarkElement);
-
-      squareMarkElement.addEventListener('click', () => {
-        replacePiece(document.getElementById(square));
-        this.removeMark();
-        currentTurn++;
-      });
     });
 
     pieceObj.move().canTakePieceSquares.forEach((square) => {
       const squareMarkElement = document.createElement('div');
       squareMarkElement.className = 'square__can-take';
       document.getElementById(square).appendChild(squareMarkElement);
-
-      squareMarkElement.parentElement.addEventListener('click', () => {
-        replacePiece(document.getElementById(square));
-        this.removeMark();
-        currentTurn++;
-      });
     });
   },
   removeMark() {
@@ -167,12 +406,8 @@ const marks = {
       square.remove();
     });
     document.querySelectorAll('.square__can-take').forEach((square) => {
-      square.parentElement.removeEventListener('click', endTurn);
       square.remove();
     });
-    if (document.querySelector('.piece__active')) {
-      document.querySelector('.piece__active').remove();
-    }
   },
 };
 
@@ -189,6 +424,7 @@ function pieceFun(pieceObj) {
     if (activePieceId === pieceObj.id) {
       // remove an active mark
       marks.removeMark();
+      document.querySelector('.piece__active').remove();
 
       isPieceActive = false;
       activePieceId = '';
@@ -200,9 +436,9 @@ function pieceFun(pieceObj) {
       document.querySelector('.piece__active') ? document.querySelector('.piece__active').remove() : false;
 
       // add an active mark
-      const activePieceHtml = document.createElement('div');
-      activePieceHtml.className = 'piece__active';
-      document.getElementById(pieceObj.id).parentElement.appendChild(activePieceHtml);
+      const activeMarkHtml = document.createElement('div');
+      activeMarkHtml.className = 'piece__active';
+      document.getElementById(pieceObj.id).parentElement.appendChild(activeMarkHtml);
 
       marks.addMark(pieceObj);
     }
@@ -250,7 +486,7 @@ pieces.forEach((piece) => {
 
       // add event listener for each piece
       document.getElementById(pieceId).addEventListener('click', () => {
-        const chessPiece = createPiece(piece.name, color, pieceId, true);
+        const chessPiece = createPiece(piece.name, color, pieceId, document.getElementById(pieceId).dataset.isFirstMove);
         // allow movement only when it is its turn
         if (activeSide() === chessPiece.color) {
           pieceFun(chessPiece);
@@ -260,4 +496,31 @@ pieces.forEach((piece) => {
   }
 });
 
-// unfinished functions : pieceFun(); move() methods;
+// add to all squares event listener
+document.querySelectorAll('.board__square').forEach((square) => {
+  square.addEventListener('click', () => {
+    // allow movement only when square have mark
+    if (square.querySelector('.square__available') || square.querySelector('.square__can-take')) {
+      // we can't take kings so we check if this cell has king or not
+      if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
+        return;
+      }
+      // make move
+      // clear square and then move piece
+      const activePieceElement = document.getElementById(activePieceId);
+      square.innerHTML = '';
+      square.appendChild(activePieceElement);
+      // remove first move data attribute
+      activePieceElement.removeAttribute('data-is-first-move');
+      // remove marks
+      marks.removeMark();
+      document.querySelector('.piece__active').remove();
+      // end turn
+      isPieceActive = false;
+      currentTurn++;
+      activePieceId = '';
+    }
+  });
+});
+
+// unfinished functions : move() methods;
