@@ -28,12 +28,16 @@ class ChessPiece {
   }
 }
 class Pawn extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const pawnPosition = {
@@ -78,12 +82,16 @@ class Pawn extends ChessPiece {
   }
 }
 class Rook extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const rookPosition = {
@@ -133,12 +141,16 @@ class Rook extends ChessPiece {
   }
 }
 class Bishop extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const bishopPosition = {
@@ -184,12 +196,16 @@ class Bishop extends ChessPiece {
   }
 }
 class Knight extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const knightPosition = {
@@ -236,12 +252,16 @@ class Knight extends ChessPiece {
   }
 }
 class Queen extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const queenPosition = {
@@ -324,12 +344,16 @@ class Queen extends ChessPiece {
   }
 }
 class King extends ChessPiece {
-  move() {
+  move(filledAltBoard) {
     const availableSquares = [];
     const canTakePieceSquares = [];
 
-    const altBoard = [];
-    fillAltBoard(altBoard);
+    let altBoard = [];
+    if (filledAltBoard) {
+      altBoard = filledAltBoard;
+    } else {
+      fillAltBoard(altBoard);
+    }
 
     const squareId = document.getElementById(this.id).parentElement.id;
     const kingPosition = {
@@ -389,13 +413,76 @@ function fillAltBoard(altBoard) {
 // management all marks for squares
 const marks = {
   addMark(pieceObj) {
+    const validAvailableSquares = [];
+    const validCanTakePieceSquares = [];
+    const pieceStartPosition = {
+      column: columnIndex.indexOf(document.getElementById(pieceObj.id).parentElement.id[0]),
+      row: +document.getElementById(pieceObj.id).parentElement.id[1] - 1,
+    };
+
+    // we check if after move allied king won't be under check
+    function findValidsSquares(square, validArray) {
+      const altBoard = [];
+      fillAltBoard(altBoard);
+
+      const newPiecePosition = {
+        column: columnIndex.indexOf(square[0]),
+        row: +square[1] - 1,
+      };
+
+      // dlear previous location
+      altBoard[pieceStartPosition.column][pieceStartPosition.row].length = 0;
+      // clear new location if there is enemy piece
+      altBoard[newPiecePosition.column][newPiecePosition.row].length = 0;
+      altBoard[newPiecePosition.column][newPiecePosition.row].push(
+        createPiece(pieceObj.name, pieceObj.color, pieceObj.id, pieceObj.isFirstMove)
+      );
+
+      // checking all enemy pieces
+      let isValidMove = true;
+      for (let column = 0; column <= 7; column++) {
+        for (let row = 0; row <= 7; row++) {
+          const piece = altBoard[column][row][0];
+          if (piece && piece.color !== pieceObj.color) {
+            piece.move(altBoard).canTakePieceSquares.forEach((attackedSquare) => {
+              const attackedPiecePosition = {
+                column: columnIndex.indexOf(attackedSquare[0]),
+                row: +attackedSquare[1] - 1,
+              };
+              // console.log(attackedPiecePosition, attackedSquare);
+              if (
+                altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0] &&
+                altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0].name === 'king'
+              ) {
+                isValidMove = false;
+              }
+            });
+          }
+        }
+        if (!isValidMove) {
+          break;
+        }
+      }
+      if (isValidMove) {
+        validArray.push(square);
+      }
+    }
+
     pieceObj.move().availableSquares.forEach((square) => {
+      findValidsSquares(square, validAvailableSquares);
+    });
+    pieceObj.move().canTakePieceSquares.forEach((square) => {
+      findValidsSquares(square, validCanTakePieceSquares);
+    });
+
+    // mark all valid moves
+    validAvailableSquares.forEach((square) => {
       const squareMarkElement = document.createElement('div');
       squareMarkElement.className = 'square__available';
       document.getElementById(square).appendChild(squareMarkElement);
     });
 
-    pieceObj.move().canTakePieceSquares.forEach((square) => {
+    validCanTakePieceSquares.forEach((square) => {
       const squareMarkElement = document.createElement('div');
       squareMarkElement.className = 'square__can-take';
       document.getElementById(square).appendChild(squareMarkElement);
