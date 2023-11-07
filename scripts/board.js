@@ -108,6 +108,14 @@ class Rook extends ChessPiece {
       for (let column = rookPosition.column + direction; column >= 0 && column <= 7; column += direction) {
         if (altBoard[column][rookPosition.row][0] && altBoard[column][rookPosition.row][0].color === this.color) {
           // if allied piece
+          if (
+            altBoard[column][rookPosition.row][0].name === 'king' &&
+            altBoard[column][rookPosition.row][0].isFirstMove &&
+            this.isFirstMove
+          ) {
+            // Castling
+            availableSquares.push(`${columnIndex[column]}${rookPosition.row + 1} castling`);
+          }
           break;
         } else if (altBoard[column][rookPosition.row][0] && altBoard[column][rookPosition.row][0].color !== this.color) {
           // if enemy piece
@@ -228,12 +236,12 @@ class Knight extends ChessPiece {
         const row = knightPosition.row + rowPosition;
 
         if (column >= 0 && row >= 0 && column <= 7 && row <= 7) {
-          let knightsCell = altBoard[column][row];
-          // check if this cell exists
-          if (knightsCell) {
-            if (knightsCell[0] && knightsCell[0].color !== this.color) {
+          let knightsSquare = altBoard[column][row];
+          // check if this Square exists
+          if (knightsSquare) {
+            if (knightsSquare[0] && knightsSquare[0].color !== this.color) {
               canTakePieceSquares.push(`${columnIndex[column]}${row + 1}`);
-            } else if (knightsCell[0] && knightsCell[0].color === this.color) {
+            } else if (knightsSquare[0] && knightsSquare[0].color === this.color) {
               continue;
             } else {
               availableSquares.push(`${columnIndex[column]}${row + 1}`);
@@ -381,6 +389,26 @@ class King extends ChessPiece {
       }
     }
 
+    // If king has first move, then search rook to check if king can make castling
+    if (this.isFirstMove) {
+      let rooksRow = this.color === 'white' ? 0 : 7;
+      // check left rook
+      if (
+        altBoard[0][rooksRow][0] &&
+        altBoard[0][rooksRow][0].isFirstMove &&
+        altBoard[0][rooksRow][0].move().availableSquares.filter((square) => square.length > 2).length === 1
+      ) {
+        availableSquares.push(`${columnIndex[2]}${rooksRow + 1} castling`);
+      } else if (
+        // check right rook
+        altBoard[7][rooksRow][0] &&
+        altBoard[7][rooksRow][0].isFirstMove &&
+        altBoard[7][rooksRow][0].move().availableSquares.filter((square) => square.length > 2).length === 1
+      ) {
+        availableSquares.push(`${columnIndex[6]}${rooksRow + 1} castling`);
+      }
+    }
+
     return {
       availableSquares,
       canTakePieceSquares,
@@ -429,9 +457,85 @@ const marks = {
         column: columnIndex.indexOf(square[0]),
         row: +square[1] - 1,
       };
-
-      // dlear previous location
+      // clear previous location
       altBoard[pieceStartPosition.column][pieceStartPosition.row].length = 0;
+
+      // if we can make Castling
+      if (square.length > 2) {
+        // determine who is active : rook or king
+        if (pieceObj.name === 'rook') {
+          // determine which of the four rooks is active
+          switch (pieceObj.id) {
+            // white left
+            case 'piece13':
+              altBoard[3][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              newPiecePosition.column = 3;
+              newPiecePosition.row = 0;
+              // also replace king
+              altBoard[4][0].length = 0;
+              altBoard[2][0].push(createPiece('king', 'white', 'piece1'));
+              break;
+            // white right
+            case 'piece14':
+              altBoard[5][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              newPiecePosition.column = 5;
+              newPiecePosition.row = 0;
+              // also replace king
+              altBoard[4][0].length = 0;
+              altBoard[6][0].push(createPiece('king', 'white', 'piece1'));
+              break;
+            // black left
+            case 'piece15':
+              altBoard[3][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              newPiecePosition.column = 3;
+              newPiecePosition.row = 0;
+              // also replace king
+              altBoard[4][7].length = 0;
+              altBoard[2][7].push(createPiece('king', 'black', 'piece2'));
+              break;
+            // black right
+            case 'piece16':
+              altBoard[5][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              newPiecePosition.column = 3;
+              newPiecePosition.row = 0;
+              // also replace king
+              altBoard[4][7].length = 0;
+              altBoard[6][7].push(createPiece('king', 'black', 'piece2'));
+              break;
+          }
+        } else {
+          // determine which rook will make castling knowing where will king move
+          switch (square.substring(0, 2)) {
+            // white left
+            case 'c1':
+              // replace rook
+              altBoard[3][0].push(createPiece('rook', 'white', 'piece13'));
+              altBoard[0][0].length = 0;
+              // replace king
+              altBoard[2][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              break;
+            // white right
+            case 'g1':
+              altBoard[5][0].push(createPiece('rook', 'white', 'piece14'));
+              altBoard[7][0].length = 0;
+              altBoard[6][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              break;
+            // black left
+            case 'c8':
+              altBoard[3][7].push(createPiece('rook', 'black', 'piece15'));
+              altBoard[0][7].length = 0;
+              altBoard[2][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              break;
+            // black right
+            case 'g8':
+              altBoard[5][7].push(createPiece('rook', 'black', 'piece16'));
+              altBoard[7][7].length = 0;
+              altBoard[6][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+              break;
+          }
+        }
+      }
+
       // clear new location if there is enemy piece
       altBoard[newPiecePosition.column][newPiecePosition.row].length = 0;
       altBoard[newPiecePosition.column][newPiecePosition.row].push(
@@ -477,6 +581,11 @@ const marks = {
 
     // mark all valid moves
     validAvailableSquares.forEach((square) => {
+      // if there was castling
+      if (square.length > 2) {
+        square = square.substring(0, 2);
+      }
+      // ---------------------
       const squareMarkElement = document.createElement('div');
       squareMarkElement.className = 'square__available';
       document.getElementById(square).appendChild(squareMarkElement);
@@ -516,18 +625,28 @@ function pieceFun(pieceObj) {
       isPieceActive = false;
       activePieceId = '';
     } else {
-      activePieceId = pieceObj.id;
+      // if king contains 'available move' mark => it can make castling. We check if piece contains this mark. If true => activePiece won't change
+      if (
+        (document.getElementById('e1').querySelector('.square__available') &&
+          document.getElementById('e1').contains(document.getElementById('piece1'))) ||
+        (document.getElementById('e8').querySelector('.square__available') &&
+          document.getElementById('e8').contains(document.getElementById('piece2')))
+      ) {
+        return;
+      } else {
+        activePieceId = pieceObj.id;
 
-      // remove an active mark if there is one
-      marks.removeMark();
-      document.querySelector('.piece__active') ? document.querySelector('.piece__active').remove() : false;
+        // remove an active mark if there is one
+        marks.removeMark();
+        document.querySelector('.piece__active') ? document.querySelector('.piece__active').remove() : false;
 
-      // add an active mark
-      const activeMarkHtml = document.createElement('div');
-      activeMarkHtml.className = 'piece__active';
-      document.getElementById(pieceObj.id).parentElement.appendChild(activeMarkHtml);
+        // add an active mark
+        const activeMarkHtml = document.createElement('div');
+        activeMarkHtml.className = 'piece__active';
+        document.getElementById(pieceObj.id).parentElement.appendChild(activeMarkHtml);
 
-      marks.addMark(pieceObj);
+        marks.addMark(pieceObj);
+      }
     }
   }
 }
@@ -588,26 +707,96 @@ document.querySelectorAll('.board__square').forEach((square) => {
   square.addEventListener('click', () => {
     // allow movement only when square have mark
     if (square.querySelector('.square__available') || square.querySelector('.square__can-take')) {
-      // we can't take kings so we check if this cell has king or not
+      const activePieceElement = document.getElementById(activePieceId);
+      // function for end turn
+      function endTurn(secondCastlingPieceId) {
+        //  remove marks
+        marks.removeMark();
+        document.querySelector('.piece__active') ? document.querySelector('.piece__active').remove() : false;
+
+        // need to delete 'isFirstMove' atr after move
+        activePieceElement.removeAttribute('data-is-first-move');
+
+        // if it was castling and king's id was provided, then we remove first move at king
+        if (secondCastlingPieceId) {
+          document.getElementById(secondCastlingPieceId).removeAttribute('data-is-first-move');
+        }
+
+        isPieceActive = false;
+        currentTurn++;
+        activePieceId = '';
+      }
+      // we can't take kings so we check just in case if this square has king or not
       if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
+        // if we can make Castling
+        // determine which of the four rooks is active
+        if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'rook') {
+          switch (activePieceId) {
+            // white left
+            case 'piece13':
+              document.getElementById('d1').appendChild(document.getElementById(activePieceId));
+              document.getElementById('c1').appendChild(document.getElementById('piece1'));
+              // end turn
+              endTurn('piece1');
+              break;
+            // white right
+            case 'piece14':
+              document.getElementById('f1').appendChild(document.getElementById(activePieceId));
+              document.getElementById('g1').appendChild(document.getElementById('piece1'));
+              endTurn('piece1');
+              break;
+            // black left
+            case 'piece15':
+              document.getElementById('d8').appendChild(document.getElementById(activePieceId));
+              document.getElementById('c8').appendChild(document.getElementById('piece2'));
+              endTurn('piece2');
+              break;
+            // black right
+            case 'piece16':
+              document.getElementById('f8').appendChild(document.getElementById(activePieceId));
+              document.getElementById('g8').appendChild(document.getElementById('piece2'));
+              endTurn('piece2');
+              break;
+          }
+        }
         return;
       }
+      // if king can make castling when clicked on king
+      if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'king') {
+        switch (square.id) {
+          case 'c1':
+            document.getElementById('d1').appendChild(document.getElementById('piece13'));
+            document.getElementById('c1').appendChild(document.getElementById('piece1'));
+            // end turn
+            endTurn('piece13');
+            break;
+          case 'g1':
+            document.getElementById('f1').appendChild(document.getElementById('piece14'));
+            document.getElementById('g1').appendChild(document.getElementById('piece1'));
+            endTurn('piece14');
+            break;
+          case 'c8':
+            document.getElementById('d8').appendChild(document.getElementById('piece15'));
+            document.getElementById('c8').appendChild(document.getElementById('piece2'));
+            endTurn('piece15');
+            break;
+          case 'g8':
+            document.getElementById('f8').appendChild(document.getElementById('piece16'));
+            document.getElementById('g8').appendChild(document.getElementById('piece2'));
+            endTurn('piece16');
+            break;
+        }
+        return;
+      }
+
       // make move
       // clear square and then move piece
-      const activePieceElement = document.getElementById(activePieceId);
       square.innerHTML = '';
       square.appendChild(activePieceElement);
-      // remove first move data attribute
-      activePieceElement.removeAttribute('data-is-first-move');
-      // remove marks
-      marks.removeMark();
-      document.querySelector('.piece__active').remove();
       // end turn
-      isPieceActive = false;
-      currentTurn++;
-      activePieceId = '';
+      endTurn();
     }
   });
 });
 
-// unfinished functions : move() methods;
+// add: show squares where king can make castling when it was clicked (work in ~729 str); show 'check' mark when king is under check; pawn can change its type of piece
