@@ -713,6 +713,8 @@ document.querySelectorAll('.board__square').forEach((square) => {
         //  remove marks
         marks.removeMark();
         document.querySelector('.piece__active') ? document.querySelector('.piece__active').remove() : false;
+        // if king was under check, then remove mark after move
+        document.querySelector('.piece__check') ? document.querySelector('.piece__check').remove() : false;
 
         // need to delete 'isFirstMove' atr after move
         activePieceElement.removeAttribute('data-is-first-move');
@@ -722,46 +724,69 @@ document.querySelectorAll('.board__square').forEach((square) => {
           document.getElementById(secondCastlingPieceId).removeAttribute('data-is-first-move');
         }
 
+        // if enemy king has check now => add mark
+        // determine enemy king's square
+        const kingsParentElement =
+          activeSide() === 'white' ? document.getElementById('piece2').parentElement : document.getElementById('piece1').parentElement;
+        document.querySelectorAll('.piece').forEach((piece) => {
+          if (piece.dataset.color === activeSide()) {
+            // check if piece's 'canTakePieceSquares' array contain king's square
+            createPiece(piece.getAttribute('name'), piece.dataset.color, piece.id)
+              .move()
+              .canTakePieceSquares.forEach((square) => {
+                if (square === kingsParentElement.id) {
+                  if (!kingsParentElement.querySelector('.piece__check')) {
+                    const checkMark = document.createElement('div');
+                    checkMark.className = 'piece__check';
+                    kingsParentElement.appendChild(checkMark);
+                  }
+                }
+              });
+          }
+        });
+
         isPieceActive = false;
         currentTurn++;
         activePieceId = '';
       }
-      // we can't take kings so we check just in case if this square has king or not
-      if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
-        // if we can make Castling
-        // determine which of the four rooks is active
-        if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'rook') {
-          switch (activePieceId) {
-            // white left
-            case 'piece13':
-              document.getElementById('d1').appendChild(document.getElementById(activePieceId));
-              document.getElementById('c1').appendChild(document.getElementById('piece1'));
-              // end turn
-              endTurn('piece1');
-              break;
-            // white right
-            case 'piece14':
-              document.getElementById('f1').appendChild(document.getElementById(activePieceId));
-              document.getElementById('g1').appendChild(document.getElementById('piece1'));
-              endTurn('piece1');
-              break;
-            // black left
-            case 'piece15':
-              document.getElementById('d8').appendChild(document.getElementById(activePieceId));
-              document.getElementById('c8').appendChild(document.getElementById('piece2'));
-              endTurn('piece2');
-              break;
-            // black right
-            case 'piece16':
-              document.getElementById('f8').appendChild(document.getElementById(activePieceId));
-              document.getElementById('g8').appendChild(document.getElementById('piece2'));
-              endTurn('piece2');
-              break;
-          }
+
+      // if we can make Castling
+      // if clicked on rook determine which of the four rooks is active
+      if (
+        activePieceElement.dataset.isFirstMove &&
+        activePieceElement.getAttribute('name') === 'rook' &&
+        (square.contains(document.getElementById('piece1')) || square.contains(document.getElementById('piece1')))
+      ) {
+        switch (activePieceId) {
+          // white left
+          case 'piece13':
+            document.getElementById('d1').appendChild(document.getElementById(activePieceId));
+            document.getElementById('c1').appendChild(document.getElementById('piece1'));
+            // end turn
+            endTurn('piece1');
+            break;
+          // white right
+          case 'piece14':
+            document.getElementById('f1').appendChild(document.getElementById(activePieceId));
+            document.getElementById('g1').appendChild(document.getElementById('piece1'));
+            endTurn('piece1');
+            break;
+          // black left
+          case 'piece15':
+            document.getElementById('d8').appendChild(document.getElementById(activePieceId));
+            document.getElementById('c8').appendChild(document.getElementById('piece2'));
+            endTurn('piece2');
+            break;
+          // black right
+          case 'piece16':
+            document.getElementById('f8').appendChild(document.getElementById(activePieceId));
+            document.getElementById('g8').appendChild(document.getElementById('piece2'));
+            endTurn('piece2');
+            break;
         }
         return;
       }
-      // if king can make castling when clicked on king
+      // if clicked on king
       if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'king') {
         switch (square.id) {
           case 'c1':
@@ -785,6 +810,11 @@ document.querySelectorAll('.board__square').forEach((square) => {
             document.getElementById('g8').appendChild(document.getElementById('piece2'));
             endTurn('piece16');
             break;
+          default:
+            square.innerHTML = '';
+            square.appendChild(activePieceElement);
+            // end turn
+            endTurn();
         }
         return;
       }
@@ -793,10 +823,67 @@ document.querySelectorAll('.board__square').forEach((square) => {
       // clear square and then move piece
       square.innerHTML = '';
       square.appendChild(activePieceElement);
+
+      // if pawn get to end of the board, then it may be changed to another piece
+      if (
+        activePieceElement.getAttribute('name') === 'pawn' &&
+        (+activePieceElement.parentElement.id[1] === 8 || +activePieceElement.parentElement.id[1] === 1)
+      ) {
+        // create little window where player can choose new piece to replace pawn
+        const overlayHtml = `       
+          <div class="overlay__container">
+            <h2 class="overlay__title">Select the piece you want</h2>
+            <ul class="overlay__chose-piece">
+              <li class="overlay__piece" id="queen"><img src="img/pieces/${activeSide()}/queen.png" alt="queen" /></li>
+              <li class="overlay__piece" id="rook"><img src="img/pieces/${activeSide()}/rook.png" alt="rook" /></li>
+              <li class="overlay__piece" id="bishop"><img src="img/pieces/${activeSide()}/bishop.png" alt="bishop" /></li>
+              <li class="overlay__piece" id="knight"><img src="img/pieces/${activeSide()}/knight.png" alt="knight" /></li>
+            </ul>
+          </div>
+        `;
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.innerHTML = overlayHtml;
+        // add eventlisteners to chose piece
+        overlay.querySelectorAll('.overlay__piece').forEach((pieceButton) => {
+          pieceButton.addEventListener('click', () => {
+            const piecesSquare = activePieceElement.parentElement;
+            const newPiece = activePieceElement.cloneNode(false);
+            const newPieceName = pieceButton.id;
+            const newPieceImage = `
+              <img src="img/pieces/${activePieceElement.dataset.color}/${newPieceName}.png" />
+            `;
+
+            // after we select new piece, we update old
+            activePieceElement.remove();
+            newPiece.removeAttribute('name');
+            newPiece.setAttribute('name', newPieceName);
+            newPiece.innerHTML = newPieceImage;
+            piecesSquare.appendChild(newPiece);
+
+            console.log(newPiece);
+            newPiece.addEventListener('click', () => {
+              const chessPiece = createPiece(newPieceName, activePieceElement.dataset.color, newPiece.id);
+              // allow movement only when it is its turn
+              if (activeSide() === chessPiece.color) {
+                pieceFun(chessPiece);
+              }
+            });
+
+            // after that remove overlay
+            overlay.remove();
+          });
+        });
+        document.querySelector('main').appendChild(overlay);
+
+        // end turn
+        endTurn();
+        return;
+      }
       // end turn
       endTurn();
     }
   });
 });
 
-// add: show squares where king can make castling when it was clicked (work in ~729 str); show 'check' mark when king is under check; pawn can change its type of piece
+// add: pawn can change its type of piece
