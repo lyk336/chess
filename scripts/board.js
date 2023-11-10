@@ -553,7 +553,6 @@ const marks = {
                 column: columnIndex.indexOf(attackedSquare[0]),
                 row: +attackedSquare[1] - 1,
               };
-              // console.log(attackedPiecePosition, attackedSquare);
               if (
                 altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0] &&
                 altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0].name === 'king'
@@ -749,44 +748,42 @@ document.querySelectorAll('.board__square').forEach((square) => {
         currentTurn++;
         activePieceId = '';
       }
-
-      // if we can make Castling
-      // if clicked on rook determine which of the four rooks is active
-      if (
-        activePieceElement.dataset.isFirstMove &&
-        activePieceElement.getAttribute('name') === 'rook' &&
-        (square.contains(document.getElementById('piece1')) || square.contains(document.getElementById('piece1')))
-      ) {
-        switch (activePieceId) {
-          // white left
-          case 'piece13':
-            document.getElementById('d1').appendChild(document.getElementById(activePieceId));
-            document.getElementById('c1').appendChild(document.getElementById('piece1'));
-            // end turn
-            endTurn('piece1');
-            break;
-          // white right
-          case 'piece14':
-            document.getElementById('f1').appendChild(document.getElementById(activePieceId));
-            document.getElementById('g1').appendChild(document.getElementById('piece1'));
-            endTurn('piece1');
-            break;
-          // black left
-          case 'piece15':
-            document.getElementById('d8').appendChild(document.getElementById(activePieceId));
-            document.getElementById('c8').appendChild(document.getElementById('piece2'));
-            endTurn('piece2');
-            break;
-          // black right
-          case 'piece16':
-            document.getElementById('f8').appendChild(document.getElementById(activePieceId));
-            document.getElementById('g8').appendChild(document.getElementById('piece2'));
-            endTurn('piece2');
-            break;
+      // we can't take kings so we check just in case if this square has king or not
+      if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
+        // if we can make Castling
+        // determine which of the four rooks is active
+        if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'rook') {
+          switch (activePieceId) {
+            // white left
+            case 'piece13':
+              document.getElementById('d1').appendChild(document.getElementById(activePieceId));
+              document.getElementById('c1').appendChild(document.getElementById('piece1'));
+              // end turn
+              endTurn('piece1');
+              break;
+            // white right
+            case 'piece14':
+              document.getElementById('f1').appendChild(document.getElementById(activePieceId));
+              document.getElementById('g1').appendChild(document.getElementById('piece1'));
+              endTurn('piece1');
+              break;
+            // black left
+            case 'piece15':
+              document.getElementById('d8').appendChild(document.getElementById(activePieceId));
+              document.getElementById('c8').appendChild(document.getElementById('piece2'));
+              endTurn('piece2');
+              break;
+            // black right
+            case 'piece16':
+              document.getElementById('f8').appendChild(document.getElementById(activePieceId));
+              document.getElementById('g8').appendChild(document.getElementById('piece2'));
+              endTurn('piece2');
+              break;
+          }
         }
         return;
       }
-      // if clicked on king
+      // if king can make castling when clicked on king
       if (activePieceElement.dataset.isFirstMove && activePieceElement.getAttribute('name') === 'king') {
         switch (square.id) {
           case 'c1':
@@ -810,11 +807,6 @@ document.querySelectorAll('.board__square').forEach((square) => {
             document.getElementById('g8').appendChild(document.getElementById('piece2'));
             endTurn('piece16');
             break;
-          default:
-            square.innerHTML = '';
-            square.appendChild(activePieceElement);
-            // end turn
-            endTurn();
         }
         return;
       }
@@ -861,7 +853,6 @@ document.querySelectorAll('.board__square').forEach((square) => {
             newPiece.innerHTML = newPieceImage;
             piecesSquare.appendChild(newPiece);
 
-            console.log(newPiece);
             newPiece.addEventListener('click', () => {
               const chessPiece = createPiece(newPieceName, activePieceElement.dataset.color, newPiece.id);
               // allow movement only when it is its turn
@@ -885,5 +876,3 @@ document.querySelectorAll('.board__square').forEach((square) => {
     }
   });
 });
-
-// add: pawn can change its type of piece
