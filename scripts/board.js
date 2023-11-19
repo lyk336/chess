@@ -438,144 +438,144 @@ function fillAltBoard(altBoard) {
   });
 }
 
+// function for checking which moves are valid
+function findValidsSquares(pieceObj, square, validArray) {
+  const altBoard = [];
+  fillAltBoard(altBoard);
+
+  const pieceStartPosition = {
+    column: columnIndex.indexOf(document.getElementById(pieceObj.id).parentElement.id[0]),
+    row: +document.getElementById(pieceObj.id).parentElement.id[1] - 1,
+  };
+  const newPiecePosition = {
+    column: columnIndex.indexOf(square[0]),
+    row: +square[1] - 1,
+  };
+  // clear previous location
+  altBoard[pieceStartPosition.column][pieceStartPosition.row].length = 0;
+
+  // if we can make Castling
+  if (square.length > 2) {
+    // determine who is active : rook or king
+    if (pieceObj.name === 'rook') {
+      // determine which of the four rooks is active
+      switch (pieceObj.id) {
+        // white left
+        case 'piece13':
+          altBoard[3][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          newPiecePosition.column = 3;
+          newPiecePosition.row = 0;
+          // also replace king
+          altBoard[4][0].length = 0;
+          altBoard[2][0].push(createPiece('king', 'white', 'piece1'));
+          break;
+        // white right
+        case 'piece14':
+          altBoard[5][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          newPiecePosition.column = 5;
+          newPiecePosition.row = 0;
+          // also replace king
+          altBoard[4][0].length = 0;
+          altBoard[6][0].push(createPiece('king', 'white', 'piece1'));
+          break;
+        // black left
+        case 'piece15':
+          altBoard[3][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          newPiecePosition.column = 3;
+          newPiecePosition.row = 0;
+          // also replace king
+          altBoard[4][7].length = 0;
+          altBoard[2][7].push(createPiece('king', 'black', 'piece2'));
+          break;
+        // black right
+        case 'piece16':
+          altBoard[5][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          newPiecePosition.column = 3;
+          newPiecePosition.row = 0;
+          // also replace king
+          altBoard[4][7].length = 0;
+          altBoard[6][7].push(createPiece('king', 'black', 'piece2'));
+          break;
+      }
+    } else {
+      // determine which rook will make castling knowing where will king move
+      switch (square.substring(0, 2)) {
+        // white left
+        case 'c1':
+          // replace rook
+          altBoard[3][0].push(createPiece('rook', 'white', 'piece13'));
+          altBoard[0][0].length = 0;
+          // replace king
+          altBoard[2][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          break;
+        // white right
+        case 'g1':
+          altBoard[5][0].push(createPiece('rook', 'white', 'piece14'));
+          altBoard[7][0].length = 0;
+          altBoard[6][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          break;
+        // black left
+        case 'c8':
+          altBoard[3][7].push(createPiece('rook', 'black', 'piece15'));
+          altBoard[0][7].length = 0;
+          altBoard[2][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          break;
+        // black right
+        case 'g8':
+          altBoard[5][7].push(createPiece('rook', 'black', 'piece16'));
+          altBoard[7][7].length = 0;
+          altBoard[6][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
+          break;
+      }
+    }
+  }
+
+  // clear new location if there is enemy piece
+  altBoard[newPiecePosition.column][newPiecePosition.row].length = 0;
+  altBoard[newPiecePosition.column][newPiecePosition.row].push(
+    createPiece(pieceObj.name, pieceObj.color, pieceObj.id, pieceObj.isFirstMove)
+  );
+
+  // checking all enemy pieces
+  let isValidMove = true;
+  for (let column = 0; column <= 7; column++) {
+    for (let row = 0; row <= 7; row++) {
+      const piece = altBoard[column][row][0];
+      if (piece && piece.color !== pieceObj.color) {
+        piece.move(altBoard).canTakePieceSquares.forEach((attackedSquare) => {
+          const attackedPiecePosition = {
+            column: columnIndex.indexOf(attackedSquare[0]),
+            row: +attackedSquare[1] - 1,
+          };
+          if (
+            altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0] &&
+            altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0].name === 'king'
+          ) {
+            isValidMove = false;
+          }
+        });
+      }
+    }
+    if (!isValidMove) {
+      break;
+    }
+  }
+  if (isValidMove) {
+    validArray.push(square);
+  }
+}
 // management all marks for squares
 const marks = {
   addMark(pieceObj) {
     const validAvailableSquares = [];
     const validCanTakePieceSquares = [];
-    const pieceStartPosition = {
-      column: columnIndex.indexOf(document.getElementById(pieceObj.id).parentElement.id[0]),
-      row: +document.getElementById(pieceObj.id).parentElement.id[1] - 1,
-    };
 
     // we check if after move allied king won't be under check
-    function findValidsSquares(square, validArray) {
-      const altBoard = [];
-      fillAltBoard(altBoard);
-
-      const newPiecePosition = {
-        column: columnIndex.indexOf(square[0]),
-        row: +square[1] - 1,
-      };
-      // clear previous location
-      altBoard[pieceStartPosition.column][pieceStartPosition.row].length = 0;
-
-      // if we can make Castling
-      if (square.length > 2) {
-        // determine who is active : rook or king
-        if (pieceObj.name === 'rook') {
-          // determine which of the four rooks is active
-          switch (pieceObj.id) {
-            // white left
-            case 'piece13':
-              altBoard[3][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              newPiecePosition.column = 3;
-              newPiecePosition.row = 0;
-              // also replace king
-              altBoard[4][0].length = 0;
-              altBoard[2][0].push(createPiece('king', 'white', 'piece1'));
-              break;
-            // white right
-            case 'piece14':
-              altBoard[5][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              newPiecePosition.column = 5;
-              newPiecePosition.row = 0;
-              // also replace king
-              altBoard[4][0].length = 0;
-              altBoard[6][0].push(createPiece('king', 'white', 'piece1'));
-              break;
-            // black left
-            case 'piece15':
-              altBoard[3][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              newPiecePosition.column = 3;
-              newPiecePosition.row = 0;
-              // also replace king
-              altBoard[4][7].length = 0;
-              altBoard[2][7].push(createPiece('king', 'black', 'piece2'));
-              break;
-            // black right
-            case 'piece16':
-              altBoard[5][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              newPiecePosition.column = 3;
-              newPiecePosition.row = 0;
-              // also replace king
-              altBoard[4][7].length = 0;
-              altBoard[6][7].push(createPiece('king', 'black', 'piece2'));
-              break;
-          }
-        } else {
-          // determine which rook will make castling knowing where will king move
-          switch (square.substring(0, 2)) {
-            // white left
-            case 'c1':
-              // replace rook
-              altBoard[3][0].push(createPiece('rook', 'white', 'piece13'));
-              altBoard[0][0].length = 0;
-              // replace king
-              altBoard[2][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              break;
-            // white right
-            case 'g1':
-              altBoard[5][0].push(createPiece('rook', 'white', 'piece14'));
-              altBoard[7][0].length = 0;
-              altBoard[6][0].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              break;
-            // black left
-            case 'c8':
-              altBoard[3][7].push(createPiece('rook', 'black', 'piece15'));
-              altBoard[0][7].length = 0;
-              altBoard[2][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              break;
-            // black right
-            case 'g8':
-              altBoard[5][7].push(createPiece('rook', 'black', 'piece16'));
-              altBoard[7][7].length = 0;
-              altBoard[6][7].push(createPiece(pieceObj.name, pieceObj.color, pieceObj.id));
-              break;
-          }
-        }
-      }
-
-      // clear new location if there is enemy piece
-      altBoard[newPiecePosition.column][newPiecePosition.row].length = 0;
-      altBoard[newPiecePosition.column][newPiecePosition.row].push(
-        createPiece(pieceObj.name, pieceObj.color, pieceObj.id, pieceObj.isFirstMove)
-      );
-
-      // checking all enemy pieces
-      let isValidMove = true;
-      for (let column = 0; column <= 7; column++) {
-        for (let row = 0; row <= 7; row++) {
-          const piece = altBoard[column][row][0];
-          if (piece && piece.color !== pieceObj.color) {
-            piece.move(altBoard).canTakePieceSquares.forEach((attackedSquare) => {
-              const attackedPiecePosition = {
-                column: columnIndex.indexOf(attackedSquare[0]),
-                row: +attackedSquare[1] - 1,
-              };
-              if (
-                altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0] &&
-                altBoard[attackedPiecePosition.column][attackedPiecePosition.row][0].name === 'king'
-              ) {
-                isValidMove = false;
-              }
-            });
-          }
-        }
-        if (!isValidMove) {
-          break;
-        }
-      }
-      if (isValidMove) {
-        validArray.push(square);
-      }
-    }
-
     pieceObj.move().availableSquares.forEach((square) => {
-      findValidsSquares(square, validAvailableSquares);
+      findValidsSquares(pieceObj, square, validAvailableSquares);
     });
     pieceObj.move().canTakePieceSquares.forEach((square) => {
-      findValidsSquares(square, validCanTakePieceSquares);
+      findValidsSquares(pieceObj, square, validCanTakePieceSquares);
     });
 
     // mark all valid moves
@@ -707,6 +707,62 @@ document.querySelectorAll('.board__square').forEach((square) => {
     // allow movement only when square have mark
     if (square.querySelector('.square__available') || square.querySelector('.square__can-take')) {
       const activePieceElement = document.getElementById(activePieceId);
+      // function for ending game
+      function endGame() {
+        const altBoard = [];
+        fillAltBoard(altBoard);
+
+        let isNoAvailableMoves = true;
+        for (let column = 0; column <= 7; column++) {
+          if (!isNoAvailableMoves) {
+            break;
+          }
+          for (let row = 0; row <= 7; row++) {
+            if (!isNoAvailableMoves) {
+              break;
+            }
+            if (altBoard[column][row][0] && altBoard[column][row][0].color === activeSide()) {
+              const validAvailableSquares = [];
+              const validCanTakePieceSquares = [];
+              altBoard[column][row][0].move().availableSquares.forEach((square) => {
+                findValidsSquares(altBoard[column][row][0], square, validAvailableSquares);
+              });
+              altBoard[column][row][0].move().canTakePieceSquares.forEach((square) => {
+                findValidsSquares(altBoard[column][row][0], square, validCanTakePieceSquares);
+              });
+
+              if (validAvailableSquares.length > 0 || validCanTakePieceSquares.length > 0) {
+                isNoAvailableMoves = false;
+              }
+            }
+          }
+        }
+        if (isNoAvailableMoves) {
+          const winner = activeSide() === 'white' ? 'black' : 'white';
+          const resultScreen = document.createElement('div');
+          resultScreen.className = 'overlay';
+          if (document.querySelector('.piece__check')) {
+            resultScreen.innerHTML = `
+              <div class="overlay">
+                <div class="end">
+                  <h2 class="end__winner">${winner} won!</h2>
+                  <div class="end__image"><img src="img/pieces/${winner}/king.png" alt="" /></div>
+                </div>
+              </div>
+            `;
+          } else {
+            resultScreen.innerHTML = `
+              <div class="overlay">
+                <div class="end">
+                  <h2 class="end__winner">Stalemate - Tie!</h2>
+                  <div class="end__image"><img src="img/pieces/${winner}/king.png" alt="" /></div>
+                </div>
+              </div>
+            `;
+          }
+          document.querySelector('main').appendChild(resultScreen);
+        }
+      }
       // function for end turn
       function endTurn(secondCastlingPieceId) {
         //  remove marks
@@ -747,6 +803,7 @@ document.querySelectorAll('.board__square').forEach((square) => {
         isPieceActive = false;
         currentTurn++;
         activePieceId = '';
+        endGame();
       }
       // we can't take kings so we check just in case if this square has king or not
       if (square.contains(square.querySelector('.piece')) && square.querySelector('.piece').getAttribute('name') === 'king') {
@@ -806,6 +863,11 @@ document.querySelectorAll('.board__square').forEach((square) => {
             document.getElementById('f8').appendChild(document.getElementById('piece16'));
             document.getElementById('g8').appendChild(document.getElementById('piece2'));
             endTurn('piece16');
+            break;
+          default:
+            square.innerHTML = '';
+            square.appendChild(activePieceElement);
+            endTurn();
             break;
         }
         return;

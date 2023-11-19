@@ -193,3 +193,46 @@ body {
   background-color: transparent;
   opacity: 0.75;
 }
+/*==========================
+    endgame result styling
+  ==========================*/
+.end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  height: 15rem;
+  width: clamp(15rem, 40dvw, 30rem);
+  background-color: #edeade;
+
+  font-size: 1.5rem;
+}
+
+.end__image,
+.end__image img {
+  width: clamp(3.75rem, 10dvw, 6.25rem);
+  animation: 2s ease-in-out infinite victory;
+}
+
+@keyframes victory {
+  4%,
+  20%,
+  36% {
+    rotate: -5deg;
+  }
+  12%,
+  28%,
+  44% {
+    rotate: 5deg;
+  }
+  48% {
+    rotate: 0deg;
+  }
+}
